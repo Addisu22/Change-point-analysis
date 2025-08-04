@@ -49,23 +49,47 @@ def plot_series(df):
     plt.show()
 
 #  4. Function: Bayesian Change Point Detection
-def bayesian_change_point_model(log_returns):
-    n = len(log_returns)
-    with pm.Model() as model:
-        # Prior for change point
-        tau = pm.DiscreteUniform('tau', lower=0, upper=n)
+# def bayesian_change_point_model(log_returns):
+#     n = len(log_returns)
+#     with pm.Model() as model:
+#         # Prior for change point
+#         tau = pm.DiscreteUniform('tau', lower=0, upper=n)
 
-        # Priors for mean and std before and after tau
-        mu_1 = pm.Normal('mu_1', mu=0, sigma=1)
-        mu_2 = pm.Normal('mu_2', mu=0, sigma=1)
-        sigma = pm.HalfNormal('sigma', sigma=1)
+#         # Priors for mean and std before and after tau
+#         mu_1 = pm.Normal('mu_1', mu=0, sigma=1)
+#         mu_2 = pm.Normal('mu_2', mu=0, sigma=1)
+#         sigma = pm.HalfNormal('sigma', sigma=1)
+
+#         # Switching mean
+#         mu = pm.math.switch(tau >= np.arange(n), mu_1, mu_2)
+
+#         # Likelihood
+#         obs = pm.Normal('obs', mu=mu, sigma=sigma, observed=log_returns)
+
+#         trace = pm.sample(2000, tune=1000, target_accept=0.95, return_inferencedata=True)
+
+#     return model, trace
+def bayesian_change_point_model(log_returns):
+    log_returns = np.asarray(log_returns)
+
+    with pm.Model() as model:
+        # Change point location
+        tau = pm.DiscreteUniform("tau", lower=0, upper=len(log_returns) - 1)
+
+        # Priors for pre- and post-change means
+        mu1 = pm.Normal("mu1", mu=np.mean(log_returns), sigma=1)
+        mu2 = pm.Normal("mu2", mu=np.mean(log_returns), sigma=1)
+
+        # Common standard deviation
+        sigma = pm.HalfNormal("sigma", sigma=1)
 
         # Switching mean
-        mu = pm.math.switch(tau >= np.arange(n), mu_1, mu_2)
+        mu = pm.math.switch(tau >= np.arange(len(log_returns)), mu1, mu2)
 
         # Likelihood
-        obs = pm.Normal('obs', mu=mu, sigma=sigma, observed=log_returns)
+        obs = pm.Normal("obs", mu=mu, sigma=sigma, observed=log_returns)
 
+        # Sampling
         trace = pm.sample(2000, tune=1000, target_accept=0.95, return_inferencedata=True)
 
     return model, trace
