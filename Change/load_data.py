@@ -96,7 +96,7 @@ def bayesian_change_point_model(log_returns):
 
 #  5. Function: Summarize and Plot Results
 def summarize_results(trace, df):
-    az.plot_trace(trace, var_names=["mu_1", "mu_2", "tau"])
+    az.plot_trace(trace, var_names=["mu1", "mu2", "tau"])
     plt.tight_layout()
     plt.show()
 
@@ -108,8 +108,8 @@ def summarize_results(trace, df):
     tau_mode = int(np.round(pd.Series(tau_posterior).mode()[0]))
     change_date = df.index[tau_mode]
 
-    mu1 = trace.posterior['mu_1'].mean().item()
-    mu2 = trace.posterior['mu_2'].mean().item()
+    mu1 = trace.posterior['mu1'].mean().item()
+    mu2 = trace.posterior['mu2'].mean().item()
     perc_change = ((mu2 - mu1) / abs(mu1)) * 100
 
     print(f"\n📌 Change Point Detected Around: {change_date.strftime('%Y-%m-%d')}")
